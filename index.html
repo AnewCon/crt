@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人工具箱</title>
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <div class="app">
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+      <div class="nav-brand">🧰 个人工具箱</div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="aa">
+          <span class="tab-icon">💰</span>
+          <span class="tab-text">AA记账</span>
+        </button>
+        <button class="nav-tab" data-tab="quiz">
+          <span class="tab-icon">📚</span>
+          <span class="tab-text">题库复习</span>
+        </button>
+        <button class="nav-tab" data-tab="fortune">
+          <span class="tab-icon">🎴</span>
+          <span class="tab-text">幸运转盘</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <!-- ==================== AA记账 ==================== -->
+      <section id="aa-section" class="section active">
+        <div class="section-header">
+          <h1>💰 AA记账</h1>
+          <p>记录消费，智能分摊</p>
+        </div>
+
+        <div class="aa-stats">
+          <div class="stat-card">
+            <div class="stat-icon today">📅</div>
+            <div class="stat-info">
+              <span class="stat-label">今日消费</span>
+              <span class="stat-value" id="aa-today">¥0.00</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon personal">💳</div>
+            <div class="stat-info">
+              <span class="stat-label">本月个人</span>
+              <span class="stat-value" id="aa-month-personal">¥0.00</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon aa">🤝</div>
+            <div class="stat-info">
+              <span class="stat-label">本月AA</span>
+              <span class="stat-value" id="aa-month-aa">¥0.00</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon total">💵</div>
+            <div class="stat-info">
+              <span class="stat-label">本月总计</span>
+              <span class="stat-value" id="aa-month-total">¥0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="aa-toolbar">
+          <button class="btn btn-primary" id="aa-add-btn">
+            <span>➕</span> 添加消费
+          </button>
+          <button class="btn btn-secondary" id="aa-export-btn">
+            <span>📊</span> 导出Excel
+          </button>
+          <div class="date-filter">
+            <label>从</label>
+            <input type="date" id="aa-date-from">
+            <label>到</label>
+            <input type="date" id="aa-date-to">
+            <button class="btn btn-sm" id="aa-filter-btn">筛选</button>
+            <button class="btn btn-sm btn-ghost" id="aa-reset-filter">重置</button>
+          </div>
+        </div>
+
+        <div class="aa-content">
+          <div class="aa-table-card card">
+            <div class="card-header">
+              <h3>消费记录</h3>
+              <span class="record-count" id="aa-record-count">共 0 条</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="aa-table">
+                <thead>
+                  <tr>
+                    <th>日期</th>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>总金额</th>
+                    <th>人数</th>
+                    <th>我承担</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="aa-table-body">
+                  <tr><td colspan="7" class="empty-cell">暂无消费记录</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="aa-chart-card card">
+            <div class="card-header">
+              <h3>近7天消费趋势</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="aa-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 题库复习 ==================== -->
+      <section id="quiz-section" class="section">
+        <div class="section-header">
+          <h1>📚 题库复习</h1>
+          <p>多题库管理 · 错题强化 · 进度保存</p>
+        </div>
+
+        <!-- 题库子导航 -->
+        <div class="quiz-subnav">
+          <button class="quiz-nav-btn active" data-quiz-view="home">🏠 题库首页</button>
+          <button class="quiz-nav-btn" data-quiz-view="wrong">❌ 错题库</button>
+          <button class="quiz-nav-btn" data-quiz-view="import">📥 导入题库</button>
+        </div>
+
+        <!-- 题库首页 -->
+        <div id="quiz-home-view" class="quiz-view active">
+          <div id="quiz-resume-banner" class="resume-banner hidden">
+            <div class="resume-info">
+              <span>⏳ 你有未完成的答题进度</span>
+              <small id="resume-detail"></small>
+            </div>
+            <div class="resume-actions">
+              <button class="btn btn-primary" id="resume-continue-btn">继续答题</button>
+              <button class="btn btn-ghost" id="resume-abandon-btn">放弃进度</button>
+            </div>
+          </div>
+
+          <div class="quiz-banks" id="quiz-banks-grid">
+            <!-- 动态生成题库卡片 -->
+          </div>
+
+          <div class="add-bank-card" id="add-bank-card">
+            <div class="add-bank-icon">➕</div>
+            <span>导入新题库</span>
+          </div>
+        </div>
+
+        <!-- 答题界面 -->
+        <div id="quiz-play-view" class="quiz-view">
+          <div class="quiz-play-header">
+            <button class="btn btn-ghost btn-sm" id="quiz-exit-btn">← 退出</button>
+            <div class="quiz-progress-info">
+              <span id="quiz-progress-text">第 1 / 10 题</span>
+              <div class="progress-bar">
+                <div class="progress-fill" id="quiz-progress-fill"></div>
+              </div>
+            </div>
+            <span class="quiz-mode-badge" id="quiz-mode-badge">完整复习</span>
+          </div>
+
+          <div class="quiz-question-card card">
+            <div class="question-meta">
+              <span class="question-type" id="question-type">单选题</span>
+              <span class="question-bank" id="question-bank-name"></span>
+            </div>
+            <div class="question-content" id="question-content"></div>
+            <div class="question-options" id="question-options"></div>
+
+            <div class="question-actions" id="question-actions">
+              <button class="btn btn-primary" id="submit-answer-btn">提交答案</button>
+            </div>
+
+            <div class="question-feedback hidden" id="question-feedback">
+              <div class="feedback-result" id="feedback-result"></div>
+              <div class="feedback-answer" id="feedback-answer"></div>
+              <div class="feedback-analysis" id="feedback-analysis"></div>
+              <div class="feedback-actions">
+                <button class="btn btn-secondary hidden" id="skip-wrong-btn">⚔️ 斩（移除错题）</button>
+                <button class="btn btn-primary" id="next-question-btn">下一题</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="quiz-result-view" class="quiz-view">
+          <div class="result-card card">
+            <div class="result-score" id="result-score">80%</div>
+            <div class="result-title" id="result-title">不错，继续加油！</div>
+            <div class="result-stats">
+              <div class="result-stat">
+                <span class="result-stat-value" id="result-total">10</span>
+                <span class="result-stat-label">总题数</span>
+              </div>
+              <div class="result-stat">
+                <span class="result-stat-value correct" id="result-correct">8</span>
+                <span class="result-stat-label">正确</span>
+              </div>
+              <div class="result-stat">
+                <span class="result-stat-value wrong" id="result-wrong">2</span>
+                <span class="result-stat-label">错误</span>
+              </div>
+            </div>
+            <div class="result-actions">
+              <button class="btn btn-primary" id="result-retry-btn">再来一次</button>
+              <button class="btn btn-secondary" id="result-wrong-btn">错题强化</button>
+              <button class="btn btn-ghost" id="result-home-btn">返回首页</button>
+            </div>
+          </div>
+          <div class="result-detail card">
+            <div class="card-header">
+              <h3>答题详情</h3>
+            </div>
+            <div id="result-detail-list"></div>
+          </div>
+        </div>
+
+        <!-- 错题库 -->
+        <div id="quiz-wrong-view" class="quiz-view">
+          <div class="wrong-book-header">
+            <div class="bank-selector" id="wrong-bank-selector"></div>
+            <div class="type-filter" id="wrong-type-filter">
+              <button class="filter-btn active" data-filter="all">全部</button>
+              <button class="filter-btn" data-filter="single">单选</button>
+              <button class="filter-btn" data-filter="multiple">多选</button>
+              <button class="filter-btn" data-filter="judge">判断</button>
+            </div>
+            <button class="btn btn-danger btn-sm" id="clear-wrong-btn">清空错题</button>
+          </div>
+          <div id="wrong-list"></div>
+        </div>
+
+        <!-- 导入题库 -->
+        <div id="quiz-import-view" class="quiz-view">
+          <div class="import-wizard card">
+            <div class="wizard-steps">
+              <div class="wizard-step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-label">格式说明</div>
+              </div>
+              <div class="wizard-step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-label">粘贴题目</div>
+              </div>
+              <div class="wizard-step" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-label">预览校验</div>
+              </div>
+              <div class="wizard-step" data-step="4">
+                <div class="step-number">4</div>
+                <div class="step-label">命名保存</div>
+              </div>
+            </div>
+
+            <div class="wizard-content">
+              <!-- Step 1 -->
+              <div class="wizard-panel active" data-panel="1">
+                <h3>📋 题目格式说明</h3>
+                <p>系统会自动识别以下格式的题目文本：</p>
+                <div class="format-example">
+                  <pre>**第1题**
+这是题目内容
+A. 选项一
+B. 选项二
+C. 选项三
+**正确答案：AB**
+解析：这是一道多选题
+
+**第2题**
+判断题内容
+A. 对
+B. 错
+**正确答案：A**</pre>
+                </div>
+                <ul class="format-tips">
+                  <li>支持 <strong>第N题</strong>、<strong>第 N 题</strong>、<strong>N.</strong> 等多种题号格式</li>
+                  <li>选项支持 <strong>A.</strong>、<strong>A、</strong>、<strong>A)</strong> 等格式</li>
+                  <li>答案支持 <strong>正确答案：</strong>、<strong>答案：</strong>、<strong>参考答案：</strong> 等</li>
+                  <li>如果选项是"对/错"，自动识别为判断题</li>
+                  <li>多选题答案可连续写如 <strong>AB</strong> 或 <strong>A,B</strong></li>
+                </ul>
+                <div class="wizard-actions">
+                  <button class="btn btn-primary wizard-next">下一步</button>
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="wizard-panel" data-panel="2">
+                <h3>✏️ 粘贴题目文本</h3>
+                <textarea class="import-textarea" id="import-raw-text" placeholder="请在此粘贴题目文本..."></textarea>
+                <div class="wizard-actions">
+                  <button class="btn btn-ghost wizard-prev">上一步</button>
+                  <button class="btn btn-primary" id="import-parse-btn">解析预览</button>
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="wizard-panel" data-panel="3">
+                <h3>🔍 解析预览</h3>
+                <div class="preview-info" id="import-preview-info"></div>
+                <div class="preview-normalized" id="import-preview-normalized"></div>
+                <div class="wizard-actions">
+                  <button class="btn btn-ghost wizard-prev">上一步</button>
+                  <button class="btn btn-primary wizard-next">下一步</button>
+                </div>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="wizard-panel" data-panel="4">
+                <h3>💾 命名并保存</h3>
+                <div class="form-group">
+                  <label>题库名称</label>
+                  <input type="text" id="import-bank-name" placeholder="例如：英语四级词汇">
+                </div>
+                <div class="save-options">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="import-replace-existing">
+                    替换同名题库
+                  </label>
+                </div>
+                <div class="wizard-actions">
+                  <button class="btn btn-ghost wizard-prev">上一步</button>
+                  <button class="btn btn-success" id="import-save-btn">保存题库</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 幸运转盘 ==================== -->
+      <section id="fortune-section" class="section">
+        <div class="section-header fortune-header">
+          <h1>🎴 幸运转盘</h1>
+          <p>翻开两张卡牌，看看今天的运势</p>
+        </div>
+
+        <div class="fortune-stage">
+          <div class="fortune-cards">
+            <div class="fortune-card" id="card-1">
+              <div class="card-inner">
+                <div class="card-face card-back">
+                  <div class="card-decoration">✦</div>
+                  <div class="card-question">?</div>
+                  <div class="card-label">Luck Lab</div>
+                </div>
+                <div class="card-face card-front" id="card-1-front">
+                  <div class="card-icon" id="card-1-icon">✨</div>
+                  <div class="card-score" id="card-1-score">-</div>
+                  <div class="card-title" id="card-1-title">-</div>
+                  <div class="card-advice" id="card-1-advice">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fortune-plus">+</div>
+
+            <div class="fortune-card" id="card-2">
+              <div class="card-inner">
+                <div class="card-face card-back">
+                  <div class="card-decoration">✦</div>
+                  <div class="card-question">?</div>
+                  <div class="card-label">Luck Lab</div>
+                </div>
+                <div class="card-face card-front" id="card-2-front">
+                  <div class="card-icon" id="card-2-icon">✨</div>
+                  <div class="card-score" id="card-2-score">-</div>
+                  <div class="card-title" id="card-2-title">-</div>
+                  <div class="card-advice" id="card-2-advice">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fortune-actions">
+            <button class="fortune-btn" id="fortune-start-btn">开始测算</button>
+            <button class="fortune-btn hidden" id="fortune-retry-btn">再测一次</button>
+          </div>
+
+          <div class="fortune-result hidden" id="fortune-result">
+            <div class="result-level" id="fortune-level"></div>
+            <div class="result-description" id="fortune-description"></div>
+            <div class="result-average" id="fortune-average"></div>
+          </div>
+
+          <div class="fortune-history card">
+            <div class="card-header">
+              <h3>历史记录</h3>
+              <button class="btn btn-ghost btn-sm" id="clear-fortune-history">清空</button>
+            </div>
+            <div id="fortune-history-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- AA 添加/编辑消费弹窗 -->
+  <div class="modal-overlay hidden" id="expense-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="expense-modal-title">添加消费</h3>
+        <button class="modal-close" id="expense-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>消费名称</label>
+          <input type="text" id="expense-name" placeholder="例如：朋友聚餐">
+        </div>
+        <div class="form-group">
+          <label>消费金额</label>
+          <input type="number" id="expense-amount" placeholder="¥ 0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>消费日期</label>
+          <input type="date" id="expense-date">
+        </div>
+        <div class="form-group">
+          <label>承担方式</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="expense-type" value="personal" checked>
+              <span>我个人承担</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="expense-type" value="aa">
+              <span>多人AA</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group aa-config" id="aa-config-group">
+          <label>参与人数</label>
+          <div class="people-stepper">
+            <button type="button" id="people-minus">-</button>
+            <span id="people-count">2 人</span>
+            <button type="button" id="people-plus">+</button>
+          </div>
+          <div class="per-person-hint">
+            预计每人：<strong id="per-person-amount">¥0.00</strong>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="expense-cancel">取消</button>
+        <button class="btn btn-primary" id="expense-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用提示 -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="default-questions.js?v=4"></script>
+  <script src="quiz-storage.js?v=5"></script>
+  <script src="app.js?v=5"></script>
+</body>
+</html>
