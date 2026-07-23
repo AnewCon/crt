@@ -2024,12 +2024,14 @@ html {
 
   .quiz-subnav {
     width: 100%;
+    gap: 4px;
   }
 
   .quiz-nav-btn {
     flex: 1;
-    padding: 10px 8px;
-    font-size: 0.85rem;
+    padding: 10px 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   .quiz-play-header {
@@ -2116,55 +2118,72 @@ html {
 
   .fortune-cards {
     gap: 12px;
+    flex-wrap: nowrap;
   }
 
   .fortune-card {
-    width: 42vw;
-    max-width: 150px;
-    height: 58vw;
-    max-height: 210px;
+    width: 38vw;
+    max-width: 135px;
+    height: 52vw;
+    max-height: 185px;
+  }
+
+  .card-face {
+    padding: 14px;
   }
 
   .card-question {
-    font-size: 2.5rem;
+    font-size: 2.4rem;
+    margin-bottom: 14px;
+  }
+
+  .card-label {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+  }
+
+  .card-decoration {
+    font-size: 1.5rem;
+    margin-bottom: 14px;
   }
 
   .card-icon {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .card-score {
-    font-size: 2.2rem;
-  }
-
-  .card-title {
-    font-size: 0.85rem;
-  }
-
-  .card-advice {
-    font-size: 0.7rem;
-  }
-
-  .fortune-plus {
     font-size: 1.8rem;
   }
 
+  .card-title {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+
+  .card-advice {
+    font-size: 0.68rem;
+  }
+
+  .fortune-plus {
+    font-size: 1.4rem;
+  }
+
   .fortune-btn {
-    padding: 14px 36px;
-    font-size: 1rem;
+    padding: 12px 28px;
+    font-size: 0.95rem;
     letter-spacing: 1px;
   }
 
   .fortune-result {
-    padding: 20px;
+    padding: 16px;
   }
 
   .result-level {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .result-description {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
   .history-item {
