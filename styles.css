@@ -57,6 +57,18 @@ html, body {
   background: var(--bg);
   color: var(--text-primary);
   line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Fluid font-size scaling: desktop baseline 16px, mobile scales up for readability */
+html {
+  font-size: clamp(15px, 1.1vw + 12px, 18px);
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: clamp(15.5px, 3.8vw + 9px, 18px);
+  }
 }
 
 .app {
@@ -1920,17 +1932,21 @@ html, body {
   }
 
   .nav-brand {
-    padding: 0 0 12px;
+    padding: 0 0 10px;
+    font-size: 1.1rem;
   }
 
   .nav-tabs {
     width: 100%;
+    gap: 6px;
   }
 
   .nav-tab {
     flex: 1;
     justify-content: center;
-    padding: 10px;
+    padding: 10px 6px;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
   }
 
   .tab-text {
@@ -1938,40 +1954,265 @@ html, body {
   }
 
   .main-content {
-    padding: 16px;
+    padding: 14px;
+  }
+
+  .section-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .section-header p {
+    font-size: 0.9rem;
   }
 
   .aa-stats {
     grid-template-columns: 1fr;
   }
 
+  .stat-card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  .aa-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .aa-toolbar .btn {
+    width: 100%;
+    padding: 12px;
+  }
+
   .date-filter {
     width: 100%;
     margin-left: 0;
     flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .date-filter input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 10px;
+  }
+
+  .data-table {
+    font-size: 0.85rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+  }
+
+  .quiz-subnav {
+    width: 100%;
+  }
+
+  .quiz-nav-btn {
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 0.85rem;
   }
 
   .quiz-play-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .quiz-progress-info {
     max-width: none;
   }
 
+  .quiz-question-card {
+    padding: 18px;
+  }
+
+  .question-content {
+    font-size: 1.05rem;
+  }
+
+  .option-item {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .option-label {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+
+  .option-text {
+    font-size: 0.95rem;
+  }
+
+  .feedback-result {
+    font-size: 1.1rem;
+  }
+
+  .feedback-answer,
+  .feedback-analysis {
+    font-size: 0.9rem;
+  }
+
+  .result-score {
+    font-size: 3rem;
+  }
+
+  .result-title {
+    font-size: 1.1rem;
+  }
+
+  .result-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .result-actions .btn {
+    flex: 1 1 45%;
+  }
+
+  .wrong-book-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .wrong-item {
+    padding: 14px;
+  }
+
+  .import-wizard {
+    padding: 16px;
+  }
+
+  .wizard-step .step-label {
+    font-size: 0.7rem;
+  }
+
+  .format-example pre,
+  .format-tips li,
+  .preview-normalized {
+    font-size: 0.8rem;
+  }
+
   .fortune-cards {
-    gap: 16px;
+    gap: 12px;
   }
 
   .fortune-card {
-    width: 140px;
-    height: 210px;
+    width: 42vw;
+    max-width: 150px;
+    height: 58vw;
+    max-height: 210px;
+  }
+
+  .card-question {
+    font-size: 2.5rem;
+  }
+
+  .card-icon {
+    font-size: 1.6rem;
+  }
+
+  .card-score {
+    font-size: 2.2rem;
+  }
+
+  .card-title {
+    font-size: 0.85rem;
+  }
+
+  .card-advice {
+    font-size: 0.7rem;
+  }
+
+  .fortune-plus {
+    font-size: 1.8rem;
+  }
+
+  .fortune-btn {
+    padding: 14px 36px;
+    font-size: 1rem;
+    letter-spacing: 1px;
+  }
+
+  .fortune-result {
+    padding: 20px;
+  }
+
+  .result-level {
+    font-size: 1.6rem;
+  }
+
+  .result-description {
+    font-size: 0.95rem;
+  }
+
+  .history-item {
+    padding: 12px 16px;
+    font-size: 0.85rem;
   }
 
   #fortune-section {
-    margin: -16px;
-    padding: 20px;
+    margin: -14px;
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .modal {
+    margin: 10px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.05rem;
+  }
+
+  .modal-body {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .radio-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .radio-label {
+    padding: 12px 14px;
+  }
+
+  .toast {
+    max-width: 90vw;
+    padding: 12px 18px;
+    font-size: 0.9rem;
   }
 }
 
