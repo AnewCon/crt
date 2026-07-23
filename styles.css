@@ -29,6 +29,13 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
 
+  /* Motion: custom easing curves from emil-design-eng skill */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 160ms;
+  --duration-base: 200ms;
+
   --fortune-bg: #0b1021;
   --fortune-card-back: #1e1b4b;
   --fortune-card-front: #fffbeb;
@@ -99,13 +106,19 @@ html, body {
   font-weight: 500;
   cursor: pointer;
   border-radius: var(--radius) var(--radius) 0 0;
-  transition: all 0.2s;
+  transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
   position: relative;
 }
 
-.nav-tab:hover {
-  color: var(--primary);
-  background: var(--primary-light);
+.nav-tab:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-tab:hover {
+    color: var(--primary);
+    background: var(--primary-light);
+  }
 }
 
 .nav-tab.active {
@@ -135,7 +148,7 @@ html, body {
 
 .section {
   display: none;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.25s var(--ease-out) both;
 }
 
 .section.active {
@@ -143,7 +156,7 @@ html, body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -198,8 +211,17 @@ html, body {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
   white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -207,10 +229,16 @@ html, body {
   color: white;
 }
 
-.btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+  }
+}
+
+.btn-primary:active {
+  transform: translateY(-1px) scale(0.97);
 }
 
 .btn-secondary {
@@ -219,9 +247,11 @@ html, body {
   border: 1px solid var(--border);
 }
 
-.btn-secondary:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
 }
 
 .btn-success {
@@ -229,8 +259,10 @@ html, body {
   color: white;
 }
 
-.btn-success:hover {
-  background: #059669;
+@media (hover: hover) and (pointer: fine) {
+  .btn-success:hover {
+    background: #059669;
+  }
 }
 
 .btn-danger {
@@ -238,8 +270,10 @@ html, body {
   color: white;
 }
 
-.btn-danger:hover {
-  background: #dc2626;
+@media (hover: hover) and (pointer: fine) {
+  .btn-danger:hover {
+    background: #dc2626;
+  }
 }
 
 .btn-ghost {
@@ -247,9 +281,11 @@ html, body {
   color: var(--text-secondary);
 }
 
-.btn-ghost:hover {
-  background: var(--bg);
-  color: var(--text-primary);
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost:hover {
+    background: var(--bg);
+    color: var(--text-primary);
+  }
 }
 
 .btn-sm {
@@ -282,7 +318,7 @@ html, body {
   font-size: 14px;
   color: var(--text-primary);
   background: var(--surface);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .form-group input:focus,
@@ -312,11 +348,13 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
 }
 
-.radio-label:hover {
-  border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .radio-label:hover {
+    border-color: var(--primary);
+  }
 }
 
 .radio-label:has(input:checked) {
@@ -350,12 +388,14 @@ html, body {
   gap: 16px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+@media (hover: hover) and (pointer: fine) {
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
 }
 
 .stat-icon {
@@ -488,7 +528,11 @@ html, body {
   border-radius: var(--radius-sm);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.action-btn:active {
+  transform: scale(0.96);
 }
 
 .action-btn.edit {
@@ -496,8 +540,10 @@ html, body {
   color: #1e40af;
 }
 
-.action-btn.edit:hover {
-  background: #bfdbfe;
+@media (hover: hover) and (pointer: fine) {
+  .action-btn.edit:hover {
+    background: #bfdbfe;
+  }
 }
 
 .action-btn.delete {
@@ -505,8 +551,10 @@ html, body {
   color: #991b1b;
 }
 
-.action-btn.delete:hover {
-  background: #fecaca;
+@media (hover: hover) and (pointer: fine) {
+  .action-btn.delete:hover {
+    background: #fecaca;
+  }
 }
 
 .chart-container {
@@ -539,12 +587,18 @@ html, body {
   border-radius: var(--radius-sm);
   font-size: 18px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 
-.people-stepper button:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+.people-stepper button:active {
+  transform: scale(0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .people-stepper button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
 }
 
 .people-stepper span {
@@ -588,11 +642,17 @@ html, body {
   font-weight: 500;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
-.quiz-nav-btn:hover {
-  color: var(--primary);
+.quiz-nav-btn:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quiz-nav-btn:hover {
+    color: var(--primary);
+  }
 }
 
 .quiz-nav-btn.active {
@@ -602,7 +662,7 @@ html, body {
 
 .quiz-view {
   display: none;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.25s var(--ease-out) both;
 }
 
 .quiz-view.active {
@@ -651,14 +711,16 @@ html, body {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 20px;
-  transition: all 0.2s;
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out);
   position: relative;
 }
 
-.bank-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-  border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .bank-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+  }
 }
 
 .bank-card.default {
@@ -692,17 +754,23 @@ html, body {
   border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--text-muted);
-  transition: all 0.2s;
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 
-.bank-action-btn:hover {
-  background: var(--bg);
-  color: var(--primary);
+.bank-action-btn:active {
+  transform: scale(0.9);
 }
 
-.bank-action-btn.danger:hover {
-  background: var(--danger-light);
-  color: var(--danger);
+@media (hover: hover) and (pointer: fine) {
+  .bank-action-btn:hover {
+    background: var(--bg);
+    color: var(--primary);
+  }
+
+  .bank-action-btn.danger:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+  }
 }
 
 .bank-stats {
@@ -756,14 +824,20 @@ html, body {
   gap: 10px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out);
   min-height: 200px;
 }
 
-.add-bank-card:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-light);
+.add-bank-card:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .add-bank-card:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+  }
 }
 
 .add-bank-icon {
@@ -800,10 +874,14 @@ html, body {
 }
 
 .progress-fill {
+  width: 100%;
   height: 100%;
   background: linear-gradient(90deg, var(--primary), var(--secondary));
   border-radius: 4px;
-  transition: width 0.3s ease;
+  transform-origin: left;
+  transform: scaleX(var(--progress, 0));
+  transition: transform 0.25s var(--ease-out);
+  will-change: transform;
 }
 
 .quiz-mode-badge {
@@ -885,13 +963,19 @@ html, body {
   border: 2px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
   background: var(--surface);
 }
 
-.option-item:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
+.option-item:active {
+  transform: scale(0.99);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .option-item:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
 }
 
 .option-item.selected {
@@ -962,6 +1046,12 @@ html, body {
   border-top: 1px solid var(--border);
   padding-top: 20px;
   margin-top: 20px;
+  animation: feedbackIn 0.25s var(--ease-out);
+}
+
+@keyframes feedbackIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .feedback-result {
@@ -1137,7 +1227,11 @@ html, body {
   border-radius: var(--radius);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.bank-selector button:active {
+  transform: scale(0.96);
 }
 
 .bank-selector button.active {
@@ -1158,7 +1252,11 @@ html, body {
   border-radius: var(--radius-sm);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.filter-btn:active {
+  transform: scale(0.96);
 }
 
 .filter-btn.active {
@@ -1205,11 +1303,18 @@ html, body {
   border-radius: var(--radius-sm);
   font-size: 13px;
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 
-.wrong-remove-btn:hover {
-  background: var(--danger);
-  color: white;
+.wrong-remove-btn:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wrong-remove-btn:hover {
+    background: var(--danger);
+    color: white;
+  }
 }
 
 .wrong-options {
@@ -1307,7 +1412,7 @@ html, body {
 
 .wizard-panel.active {
   display: block;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.25s var(--ease-out) both;
 }
 
 .wizard-panel h3 {
@@ -1445,15 +1550,19 @@ html, body {
   filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.35));
 }
 
-.fortune-card:hover .card-inner {
-  transform: translateY(-4px) rotateY(0deg);
+.fortune-card:not(.flipped):hover .card-inner {
+  transform: translateY(-4px);
+}
+
+.fortune-card.flipped:hover .card-inner {
+  transform: rotateY(180deg) translateY(-4px);
 }
 
 .card-inner {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.85s var(--ease-out);
   transform-style: preserve-3d;
 }
 
@@ -1462,7 +1571,7 @@ html, body {
 }
 
 .fortune-card.flipping .card-inner {
-  animation: cardFlip 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: cardFlip 1.1s var(--ease-out) forwards;
 }
 
 @keyframes cardFlip {
@@ -1587,14 +1696,16 @@ html, body {
   box-shadow:
     0 10px 28px rgba(245, 158, 11, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  transition: all 0.25s ease;
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
 }
 
-.fortune-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow:
-    0 14px 36px rgba(245, 158, 11, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+@media (hover: hover) and (pointer: fine) {
+  .fortune-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+      0 14px 36px rgba(245, 158, 11, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
 }
 
 .fortune-btn:active {
@@ -1616,7 +1727,7 @@ html, body {
   border-radius: var(--radius-xl);
   padding: 32px;
   margin-bottom: 28px;
-  animation: fadeIn 0.6s ease;
+  animation: fadeIn 0.5s var(--ease-out) both;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
 }
 
@@ -1667,11 +1778,13 @@ html, body {
   padding: 14px 22px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   font-size: 14px;
-  transition: background 0.15s;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
-.history-item:hover {
-  background: rgba(241, 245, 249, 0.6);
+@media (hover: hover) and (pointer: fine) {
+  .history-item:hover {
+    background: rgba(241, 245, 249, 0.6);
+  }
 }
 
 .history-item:last-child {
@@ -1709,11 +1822,11 @@ html, body {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
-  animation: modalIn 0.3s ease;
+  animation: modalIn 0.25s var(--ease-out) both;
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -1755,7 +1868,8 @@ html, body {
   position: fixed;
   bottom: 30px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
   background: var(--text-primary);
   color: white;
   padding: 12px 24px;
@@ -1763,12 +1877,13 @@ html, body {
   font-size: 14px;
   z-index: 2000;
   box-shadow: var(--shadow-lg);
-  animation: toastIn 0.3s ease;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
 }
 
-@keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
 }
 
 /* ========== 工具类 ========== */
@@ -1871,7 +1986,7 @@ html, body {
   z-index: 3000;
   padding: 20px;
   backdrop-filter: blur(3px);
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.2s var(--ease-out) both;
 }
 
 .custom-dialog {
@@ -1882,7 +1997,7 @@ html, body {
   padding: 24px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
   text-align: center;
-  animation: modalIn 0.25s ease;
+  animation: modalIn 0.2s var(--ease-out) both;
 }
 
 .custom-dialog-message {
@@ -1920,4 +2035,16 @@ html, body {
 .custom-dialog-actions .btn {
   flex: 1;
   min-width: 90px;
+}
+
+/* ========== Reduced motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

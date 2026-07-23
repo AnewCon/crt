@@ -10,7 +10,13 @@ function showToast(message, duration = 2000) {
   const toast = $('#toast')
   toast.textContent = message
   toast.classList.remove('hidden')
-  setTimeout(() => toast.classList.add('hidden'), duration)
+  if (toast._hideTimer) clearTimeout(toast._hideTimer)
+  if (toast._transitionTimer) clearTimeout(toast._transitionTimer)
+  requestAnimationFrame(() => toast.classList.add('visible'))
+  toast._hideTimer = setTimeout(() => {
+    toast.classList.remove('visible')
+    toast._transitionTimer = setTimeout(() => toast.classList.add('hidden'), 250)
+  }, duration)
 }
 
 function escapeHtml(str) {
@@ -793,7 +799,7 @@ const QuizModule = (function () {
     $('#question-content').textContent = q.content
 
     $('#quiz-progress-text').textContent = `第 ${currentIndex + 1} / ${questionPool.length} 题`
-    $('#quiz-progress-fill').style.width = `${((currentIndex + 1) / questionPool.length) * 100}%`
+    $('#quiz-progress-fill').style.setProperty('--progress', ((currentIndex + 1) / questionPool.length).toString())
 
     $('#quiz-mode-badge').textContent = currentMode === 'wrong' ? '错题强化' : '完整复习'
     $('#quiz-mode-badge').className = 'quiz-mode-badge ' + (currentMode === 'wrong' ? 'wrong' : '')
