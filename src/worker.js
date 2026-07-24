@@ -285,6 +285,17 @@ async function handleRequest(request, env) {
 
 export default {
   async fetch(request, env, ctx) {
-    return handleRequest(request, env)
+    try {
+      return await handleRequest(request, env)
+    } catch (error) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: error.message,
+        stack: error.stack
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
   }
 }
