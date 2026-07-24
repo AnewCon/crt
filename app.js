@@ -53,10 +53,10 @@ const Auth = (function () {
     return { ok: res.ok, status: res.status, data }
   }
 
-  async function login(username, password) {
+  async function login(username, password, captchaToken) {
     const { ok, data } = await api('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, captchaToken })
     })
     if (ok && data.success) {
       setAuth(data.data.token, { userId: data.data.userId, username: data.data.username })
@@ -65,10 +65,10 @@ const Auth = (function () {
     return { success: false, message: data.message || '登录失败' }
   }
 
-  async function register(username, password) {
+  async function register(username, password, captchaToken) {
     const { ok, data } = await api('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ username, password, captchaToken })
     })
     if (ok && data.success) {
       setAuth(data.data.token, { userId: data.data.userId, username: data.data.username })
@@ -125,12 +125,16 @@ const Auth = (function () {
   function switchAuthTab(tab) {
     $$('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.authTab === tab))
     $$('.auth-panel').forEach(p => p.classList.toggle('active', p.id === `auth-${tab}-panel`))
-    $('#auth-modal-title').textContent = tab === 'login' ? '登录' : '注册'
+    const tabsContainer = $('.auth-tabs')
+    if (tabsContainer) tabsContainer.dataset.active = tab
   }
 
   function init() {
     renderUserUI()
     checkAuth()
+
+    const tabsContainer = $('.auth-tabs')
+    if (tabsContainer) tabsContainer.dataset.active = 'login'
 
     $('#auth-modal-close').addEventListener('click', closeAuthModal)
     $('#auth-modal').addEventListener('click', e => {
@@ -148,19 +152,22 @@ const Auth = (function () {
         showToast('请输入用户名和密码')
         return
       }
-      const btn = $('#login-submit-btn')
-      btn.disabled = true
-      btn.textContent = '登录中...'
-      const result = await login(username, password)
-      btn.disabled = false
-      btn.textContent = '登录'
-      if (result.success) {
-        renderUserUI()
-        closeAuthModal()
-        showToast('登录成功')
-      } else {
-        showToast(result.message)
-      }
+      // 验证码仅校验一次，校验通过后执行登录；登录失败不再重新弹出验证码
+      Captcha.open(async (captchaToken) => {
+        const btn = $('#login-submit-btn')
+        btn.disabled = true
+        btn.textContent = '登录中...'
+        const result = await login(username, password, captchaToken)
+        btn.disabled = false
+        btn.textContent = '登录'
+        if (result.success) {
+          renderUserUI()
+          closeAuthModal()
+          showToast('登录成功')
+        } else {
+          showToast(result.message)
+        }
+      })
     })
 
     $('#register-submit-btn').addEventListener('click', async () => {
@@ -179,23 +186,292 @@ const Auth = (function () {
         showToast('两次输入的密码不一致')
         return
       }
-      const btn = $('#register-submit-btn')
-      btn.disabled = true
-      btn.textContent = '注册中...'
-      const result = await register(username, password)
-      btn.disabled = false
-      btn.textContent = '注册'
-      if (result.success) {
-        renderUserUI()
-        closeAuthModal()
-        showToast('注册成功')
-      } else {
-        showToast(result.message)
-      }
+      Captcha.open(async (captchaToken) => {
+        const btn = $('#register-submit-btn')
+        btn.disabled = true
+        btn.textContent = '注册中...'
+        const result = await register(username, password, captchaToken)
+        btn.disabled = false
+        btn.textContent = '注册'
+        if (result.success) {
+          renderUserUI()
+          closeAuthModal()
+          showToast('注册成功')
+        } else {
+          showToast(result.message)
+        }
+      })
     })
   }
 
   return { init, getToken, getUser, api, logout }
+})()
+
+// ========== 验证码模块（参考 tianai-captcha 滑动拼图交互）==========
+const Captcha = (function () {
+  let currentId = null
+  let currentTargetX = 0
+  let currentSlotSize = 44
+  let currentWidth = 280
+  let currentHeight = 160
+  let onSuccess = null
+  let isDragging = false
+  let startPointerX = 0
+  let currentBtnX = 0
+  let trackWidth = 0
+  let btnWidth = 44
+  let maxMove = 0
+
+  const modal = $('#captcha-modal')
+  const bgCanvas = $('#captcha-bg')
+  const slotCanvas = $('#captcha-slot')
+  const track = $('#captcha-track')
+  const btn = $('#captcha-btn')
+  const mask = $('#captcha-track-mask')
+  const status = $('#captcha-status')
+  const refreshBtn = $('#captcha-refresh')
+  const btnIcon = $('#captcha-btn-icon')
+
+  function api(path, options = {}) {
+    return fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    }).then(async res => {
+      const data = await res.json().catch(() => ({}))
+      return { ok: res.ok, status: res.status, data }
+    })
+  }
+
+  async function generate() {
+    resetUI()
+    const box = $('#captcha-box')
+    const boxWidth = box ? Math.min(600, Math.max(200, box.offsetWidth)) : CAPTCHA_WIDTH
+    const { ok, data } = await api('/api/captcha/gen', {
+      method: 'POST',
+      body: JSON.stringify({ width: boxWidth })
+    })
+    if (!ok || !data.success) {
+      showStatus('验证码加载失败', 'fail')
+      return
+    }
+    currentId = data.data.id
+    currentTargetX = data.data.targetX
+    currentSlotSize = data.data.slotSize
+    currentWidth = data.data.width
+    currentHeight = data.data.height
+    draw(data.data)
+  }
+
+  function draw(data) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const w = currentWidth
+    const h = currentHeight
+    const slot = currentSlotSize
+
+    // 设置 canvas 实际像素尺寸
+    bgCanvas.width = w * dpr
+    bgCanvas.height = h * dpr
+    slotCanvas.width = w * dpr
+    slotCanvas.height = h * dpr
+
+    const bgCtx = bgCanvas.getContext('2d')
+    const slotCtx = slotCanvas.getContext('2d')
+    bgCtx.scale(dpr, dpr)
+    slotCtx.scale(dpr, dpr)
+
+    // 绘制背景：柔和的随机几何图案
+    const hue = 220 + Math.floor(Math.random() * 40)
+    const baseColor = `hsl(${hue}, 60%, 92%)`
+    bgCtx.fillStyle = baseColor
+    bgCtx.fillRect(0, 0, w, h)
+
+    // 装饰性几何图形
+    for (let i = 0; i < 18; i++) {
+      bgCtx.fillStyle = `hsla(${hue + Math.random() * 60}, 70%, 70%, ${0.08 + Math.random() * 0.12})`
+      const shapeType = Math.random()
+      const x = Math.random() * w
+      const y = Math.random() * h
+      const size = 10 + Math.random() * 40
+      bgCtx.beginPath()
+      if (shapeType < 0.33) {
+        bgCtx.arc(x, y, size / 2, 0, Math.PI * 2)
+      } else if (shapeType < 0.66) {
+        bgCtx.rect(x - size / 2, y - size / 2, size, size)
+      } else {
+        bgCtx.moveTo(x, y - size / 2)
+        bgCtx.lineTo(x + size / 2, y + size / 2)
+        bgCtx.lineTo(x - size / 2, y + size / 2)
+        bgCtx.closePath()
+      }
+      bgCtx.fill()
+    }
+
+    // 缺口路径：圆角矩形
+    const slotY = Math.floor((h - slot) / 2)
+    function createSlotPath(ctx, x, y) {
+      const r = 6
+      ctx.beginPath()
+      ctx.moveTo(x + r, y)
+      ctx.lineTo(x + slot - r, y)
+      ctx.quadraticCurveTo(x + slot, y, x + slot, y + r)
+      ctx.lineTo(x + slot, y + slot - r)
+      ctx.quadraticCurveTo(x + slot, y + slot, x + slot - r, y + slot)
+      ctx.lineTo(x + r, y + slot)
+      ctx.quadraticCurveTo(x, y + slot, x, y + slot - r)
+      ctx.lineTo(x, y + r)
+      ctx.quadraticCurveTo(x, y, x + r, y)
+      ctx.closePath()
+    }
+
+    // 在背景上绘制缺口阴影
+    createSlotPath(bgCtx, currentTargetX, slotY)
+    bgCtx.fillStyle = 'rgba(0, 0, 0, 0.18)'
+    bgCtx.fill()
+    bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)'
+    bgCtx.lineWidth = 1.5
+    bgCtx.stroke()
+
+    // 在 slotCanvas 上绘制滑块（缺口的完整内容）
+    slotCtx.clearRect(0, 0, w, h)
+    slotCtx.save()
+    createSlotPath(slotCtx, currentTargetX, slotY)
+    slotCtx.clip()
+    slotCtx.fillStyle = baseColor
+    slotCtx.fillRect(0, 0, w, h)
+    for (let i = 0; i < 8; i++) {
+      slotCtx.fillStyle = `hsla(${hue + Math.random() * 60}, 70%, 55%, ${0.15 + Math.random() * 0.15})`
+      const x = Math.random() * w
+      const y = Math.random() * h
+      const size = 15 + Math.random() * 35
+      slotCtx.beginPath()
+      slotCtx.arc(x, y, size / 2, 0, Math.PI * 2)
+      slotCtx.fill()
+    }
+    // 滑块高亮边框
+    createSlotPath(slotCtx, currentTargetX, slotY)
+    slotCtx.strokeStyle = 'rgba(99, 102, 241, 0.8)'
+    slotCtx.lineWidth = 2
+    slotCtx.stroke()
+    slotCtx.restore()
+  }
+
+  function resetUI() {
+    btn.classList.remove('success', 'fail')
+    btn.style.transform = 'translateX(0)'
+    btn.style.setProperty('--captcha-x', '0px')
+    mask.style.width = '0'
+    btnIcon.textContent = '→'
+    showStatus('', '')
+    currentBtnX = 0
+  }
+
+  function showStatus(text, type) {
+    status.textContent = text
+    status.className = 'captcha-status' + (type ? ` ${type}` : '')
+  }
+
+  function open(callback) {
+    onSuccess = callback
+    modal.classList.remove('hidden')
+    requestAnimationFrame(() => modal.classList.add('visible'))
+    generate()
+  }
+
+  function close() {
+    modal.classList.remove('visible')
+    setTimeout(() => modal.classList.add('hidden'), 250)
+  }
+
+  async function verify() {
+    const { ok, data } = await api('/api/captcha/verify', {
+      method: 'POST',
+      body: JSON.stringify({ id: currentId, x: Math.round(currentBtnX / trackWidth * currentWidth) })
+    })
+    if (ok && data.success) {
+      btn.classList.add('success')
+      btnIcon.textContent = '✓'
+      showStatus('验证成功', 'success')
+      setTimeout(() => {
+        close()
+        if (onSuccess) onSuccess(data.data.token)
+      }, 400)
+    } else {
+      btn.classList.add('fail')
+      btnIcon.textContent = '✕'
+      showStatus(data.message || '验证失败，请重试', 'fail')
+      setTimeout(() => {
+        resetUI()
+        generate()
+      }, 800)
+    }
+  }
+
+  function handleStart(clientX) {
+    if (btn.classList.contains('success')) return
+    isDragging = true
+    startPointerX = clientX
+    trackWidth = track.offsetWidth
+    btnWidth = btn.offsetWidth
+    maxMove = trackWidth - btnWidth
+    btn.style.transition = 'none'
+    mask.style.transition = 'none'
+  }
+
+  function handleMove(clientX) {
+    if (!isDragging) return
+    let dx = clientX - startPointerX
+    dx = Math.max(0, Math.min(dx, maxMove))
+    currentBtnX = dx
+    btn.style.transform = `translateX(${dx}px)`
+    btn.style.setProperty('--captcha-x', `${dx}px`)
+    mask.style.width = `${dx + btnWidth / 2}px`
+  }
+
+  function handleEnd() {
+    if (!isDragging) return
+    isDragging = false
+    btn.style.transition = 'transform 200ms var(--ease-out)'
+    mask.style.transition = 'width 200ms var(--ease-out)'
+    if (currentBtnX > maxMove * 0.05) {
+      verify()
+    } else {
+      currentBtnX = 0
+      btn.style.transform = 'translateX(0)'
+      mask.style.width = '0'
+    }
+  }
+
+  function init() {
+    if (!modal || !track || !btn) return
+
+    $('#captcha-modal-close').addEventListener('click', close)
+    modal.addEventListener('click', e => {
+      if (e.target === modal) close()
+    })
+    refreshBtn.addEventListener('click', () => {
+      resetUI()
+      generate()
+    })
+
+    // 鼠标事件
+    btn.addEventListener('mousedown', e => handleStart(e.clientX))
+    window.addEventListener('mousemove', e => handleMove(e.clientX))
+    window.addEventListener('mouseup', handleEnd)
+
+    // 触摸事件
+    btn.addEventListener('touchstart', e => {
+      handleStart(e.touches[0].clientX)
+    }, { passive: true })
+    window.addEventListener('touchmove', e => {
+      handleMove(e.touches[0].clientX)
+    }, { passive: true })
+    window.addEventListener('touchend', handleEnd, { passive: true })
+  }
+
+  return { init, open, close }
 })()
 
 // ========== 通用工具 ==========
@@ -316,22 +592,115 @@ function generateId() {
   return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
 }
 
-// ========== 全局：标签切换 ==========
-const tabs = $$('.nav-tab')
-const sections = $$('.section')
+// ========== 全局：标签切换 + 滑动导航 ==========
+const AppNavigation = (function () {
+  const tabs = $$('.nav-tab')
+  const sections = $$('.section')
+  const track = $('#sections-track')
+  const mainContent = $('.main-content')
+  const sectionIds = ['aa', 'quiz', 'fortune']
+  let currentIndex = 0
+  let isDragging = false
+  let startX = 0
+  let currentX = 0
+  let deltaX = 0
+  let startY = 0
 
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const target = tab.dataset.tab
-    tabs.forEach(t => t.classList.remove('active'))
-    sections.forEach(s => s.classList.remove('active'))
-    tab.classList.add('active')
-    $(`#${target}-section`).classList.add('active')
-    if (target === 'aa') AAModule.refresh()
-    if (target === 'quiz') QuizModule.showHome()
-    if (target === 'fortune') FortuneModule.refresh()
-  })
-})
+  function switchTo(index, { animated = true, refresh = true } = {}) {
+    if (index < 0) index = 0
+    if (index >= sectionIds.length) index = sectionIds.length - 1
+    currentIndex = index
+
+    tabs.forEach((t, i) => t.classList.toggle('active', i === index))
+    sections.forEach((s, i) => s.classList.toggle('active', i === index))
+
+    if (track) {
+      track.style.transition = animated ? 'transform 300ms var(--ease-out)' : 'none'
+      track.style.transform = `translateX(-${index * 100}%)`
+    }
+
+    if (refresh) {
+      const target = sectionIds[index]
+      if (target === 'aa') AAModule.refresh()
+      if (target === 'quiz') QuizModule.showHome()
+      if (target === 'fortune') FortuneModule.refresh()
+    }
+  }
+
+  function init() {
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => switchTo(i))
+    })
+
+    if (!mainContent || !track) return
+
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
+    if (!isTouchDevice) return
+
+    mainContent.addEventListener('touchstart', handleTouchStart, { passive: true })
+    mainContent.addEventListener('touchmove', handleTouchMove, { passive: true })
+    mainContent.addEventListener('touchend', handleTouchEnd, { passive: true })
+    mainContent.addEventListener('touchcancel', handleTouchEnd, { passive: true })
+  }
+
+  function handleTouchStart(e) {
+    startTime = e.timeStamp
+    const touch = e.touches[0]
+    startX = touch.clientX
+    startY = touch.clientY
+    isDragging = true
+    deltaX = 0
+    track.classList.add('dragging')
+    track.style.transition = 'none'
+    // 使用轨道宽度（与 CSS 百分比单位一致，不含 main-content 内边距）
+    currentX = -currentIndex * track.offsetWidth
+  }
+
+  function handleTouchMove(e) {
+    if (!isDragging) return
+    const touch = e.touches[0]
+    deltaX = touch.clientX - startX
+    const deltaY = touch.clientY - startY
+
+    // 垂直滑动占优时不处理
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+      isDragging = false
+      track.classList.remove('dragging')
+      switchTo(currentIndex, { animated: true, refresh: false })
+      return
+    }
+
+    // 边界阻尼
+    let damped = deltaX
+    if ((currentIndex === 0 && deltaX > 0) || (currentIndex === sectionIds.length - 1 && deltaX < 0)) {
+      damped = deltaX * 0.35
+    }
+
+    track.style.transform = `translateX(${currentX + damped}px)`
+  }
+
+  function handleTouchEnd(e) {
+    if (!isDragging) return
+    isDragging = false
+    track.classList.remove('dragging')
+
+    // 阈值与轨道宽度保持一致，避免含内边距导致的错位
+    const threshold = track.offsetWidth * 0.18
+    const velocity = deltaX / (e.timeStamp - startTime || 1)
+
+    if (deltaX < -threshold || (deltaX < -40 && velocity < -0.6)) {
+      switchTo(currentIndex + 1)
+    } else if (deltaX > threshold || (deltaX > 40 && velocity > 0.6)) {
+      switchTo(currentIndex - 1)
+    } else {
+      switchTo(currentIndex, { refresh: false })
+    }
+  }
+
+  let startTime = 0
+
+  return { init, switchTo, currentIndex: () => currentIndex }
+})()
 
 // ========== AA 记账模块 ==========
 const AAModule = (function () {
@@ -1631,7 +2000,9 @@ const FortuneModule = (function () {
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
   QS.initDefaultBanks(defaultBanks)
+  AppNavigation.init()
   Auth.init()
+  Captcha.init()
   AAModule.refresh()
   QuizModule.showHome()
   FortuneModule.refresh()

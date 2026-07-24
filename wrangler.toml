@@ -1,5 +1,5 @@
 name = "crt"
-main = "src/worker.js"
+pages_build_output_dir = "dist"
 compatibility_date = "2024-01-01"
 
 # D1 数据库绑定（创建后填写 database_id）
@@ -8,10 +8,6 @@ binding = "DB"
 database_name = "crt-db"
 database_id = "89eeab87-2056-46b7-acd9-663ee1ae3ee1"
 
-# JWT 密钥（生产环境请使用 wrangler secret 设置）
+# JWT 密钥（生产环境建议通过 wrangler pages secret put JWT_SECRET 设置）
 [vars]
 JWT_SECRET = "crt-jwt-secret-change-in-production"
-
-# 静态站点部署配置
-[site]
-bucket = "./dist"
