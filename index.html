@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>个人工具箱</title>
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
   <div class="app">
@@ -24,6 +24,9 @@
           <span class="tab-icon">🎴</span>
           <span class="tab-text">幸运转盘</span>
         </button>
+      </div>
+      <div class="nav-user" id="nav-user">
+        <button class="btn btn-primary btn-sm" id="login-btn">登录 / 注册</button>
       </div>
     </nav>
 
@@ -459,11 +462,53 @@ B. 错
     </div>
   </div>
 
+  <!-- 登录/注册弹窗 -->
+  <div class="modal-overlay hidden" id="auth-modal">
+    <div class="modal auth-modal">
+      <div class="modal-header">
+        <h3 id="auth-modal-title">登录</h3>
+        <button class="modal-close" id="auth-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth-tab="login">登录</button>
+          <button class="auth-tab" data-auth-tab="register">注册</button>
+        </div>
+        <div class="auth-panel active" id="auth-login-panel">
+          <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="login-username" placeholder="请输入用户名" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="login-password" placeholder="请输入密码" autocomplete="current-password">
+          </div>
+          <button class="btn btn-primary btn-block" id="login-submit-btn">登录</button>
+        </div>
+        <div class="auth-panel" id="auth-register-panel">
+          <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="register-username" placeholder="3-20 位用户名" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="register-password" placeholder="至少 6 位密码" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label>确认密码</label>
+            <input type="password" id="register-password-confirm" placeholder="再次输入密码" autocomplete="new-password">
+          </div>
+          <button class="btn btn-primary btn-block" id="register-submit-btn">注册</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 通用提示 -->
   <div class="toast hidden" id="toast"></div>
 
   <script src="default-questions.js?v=4"></script>
-  <script src="quiz-storage.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="quiz-storage.js?v=6"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

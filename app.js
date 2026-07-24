@@ -2,6 +2,202 @@
 const defaultBanks = window.defaultBanks
 const QS = window.QuizStorage
 
+// ========== API 配置 ==========
+// 根据当前环境自动选择 API 地址
+const API_BASE = (() => {
+  const host = window.location.host
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    // 本地开发时使用 Pages 部署地址（或替换为你的 Worker 地址）
+    return ''
+  }
+  return ''
+})()
+
+// ========== 认证模块 ==========
+const Auth = (function () {
+  const TOKEN_KEY = 'crt_token'
+  const USER_KEY = 'crt_user'
+
+  function getToken() {
+    return localStorage.getItem(TOKEN_KEY)
+  }
+
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem(USER_KEY))
+    } catch {
+      return null
+    }
+  }
+
+  function setAuth(token, user) {
+    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(USER_KEY, JSON.stringify(user))
+  }
+
+  function clearAuth() {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
+  }
+
+  async function api(path, options = {}) {
+    const url = `${API_BASE}${path}`
+    const token = getToken()
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers
+    }
+    const res = await fetch(url, { ...options, headers })
+    const data = await res.json().catch(() => ({}))
+    return { ok: res.ok, status: res.status, data }
+  }
+
+  async function login(username, password) {
+    const { ok, data } = await api('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+    })
+    if (ok && data.success) {
+      setAuth(data.data.token, { userId: data.data.userId, username: data.data.username })
+      return { success: true }
+    }
+    return { success: false, message: data.message || '登录失败' }
+  }
+
+  async function register(username, password) {
+    const { ok, data } = await api('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+    })
+    if (ok && data.success) {
+      setAuth(data.data.token, { userId: data.data.userId, username: data.data.username })
+      return { success: true }
+    }
+    return { success: false, message: data.message || '注册失败' }
+  }
+
+  function logout() {
+    clearAuth()
+    renderUserUI()
+    showToast('已退出登录')
+  }
+
+  async function checkAuth() {
+    const token = getToken()
+    if (!token) return false
+    const { ok, data } = await api('/api/auth/me')
+    if (ok && data.success) {
+      setAuth(token, { userId: data.data.userId, username: data.data.username })
+      renderUserUI()
+      return true
+    }
+    clearAuth()
+    renderUserUI()
+    return false
+  }
+
+  function renderUserUI() {
+    const container = $('#nav-user')
+    const user = getUser()
+    if (user && user.username) {
+      container.innerHTML = `
+        <span class="nav-username">👤 ${escapeHtml(user.username)}</span>
+        <button class="btn btn-ghost btn-sm" id="logout-btn">退出</button>
+      `
+      $('#logout-btn').addEventListener('click', logout)
+    } else {
+      container.innerHTML = `<button class="btn btn-primary btn-sm" id="login-btn">登录 / 注册</button>`
+      $('#login-btn').addEventListener('click', openAuthModal)
+    }
+  }
+
+  function openAuthModal() {
+    $('#auth-modal').classList.remove('hidden')
+    requestAnimationFrame(() => $('#auth-modal').classList.add('visible'))
+  }
+
+  function closeAuthModal() {
+    $('#auth-modal').classList.remove('visible')
+    setTimeout(() => $('#auth-modal').classList.add('hidden'), 250)
+  }
+
+  function switchAuthTab(tab) {
+    $$('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.authTab === tab))
+    $$('.auth-panel').forEach(p => p.classList.toggle('active', p.id === `auth-${tab}-panel`))
+    $('#auth-modal-title').textContent = tab === 'login' ? '登录' : '注册'
+  }
+
+  function init() {
+    renderUserUI()
+    checkAuth()
+
+    $('#auth-modal-close').addEventListener('click', closeAuthModal)
+    $('#auth-modal').addEventListener('click', e => {
+      if (e.target === $('#auth-modal')) closeAuthModal()
+    })
+
+    $$('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchAuthTab(tab.dataset.authTab))
+    })
+
+    $('#login-submit-btn').addEventListener('click', async () => {
+      const username = $('#login-username').value.trim()
+      const password = $('#login-password').value
+      if (!username || !password) {
+        showToast('请输入用户名和密码')
+        return
+      }
+      const btn = $('#login-submit-btn')
+      btn.disabled = true
+      btn.textContent = '登录中...'
+      const result = await login(username, password)
+      btn.disabled = false
+      btn.textContent = '登录'
+      if (result.success) {
+        renderUserUI()
+        closeAuthModal()
+        showToast('登录成功')
+      } else {
+        showToast(result.message)
+      }
+    })
+
+    $('#register-submit-btn').addEventListener('click', async () => {
+      const username = $('#register-username').value.trim()
+      const password = $('#register-password').value
+      const confirm = $('#register-password-confirm').value
+      if (!username || !password) {
+        showToast('请输入用户名和密码')
+        return
+      }
+      if (password.length < 6) {
+        showToast('密码长度至少为 6 位')
+        return
+      }
+      if (password !== confirm) {
+        showToast('两次输入的密码不一致')
+        return
+      }
+      const btn = $('#register-submit-btn')
+      btn.disabled = true
+      btn.textContent = '注册中...'
+      const result = await register(username, password)
+      btn.disabled = false
+      btn.textContent = '注册'
+      if (result.success) {
+        renderUserUI()
+        closeAuthModal()
+        showToast('注册成功')
+      } else {
+        showToast(result.message)
+      }
+    })
+  }
+
+  return { init, getToken, getUser, api, logout }
+})()
+
 // ========== 通用工具 ==========
 function $(selector) { return document.querySelector(selector) }
 function $$(selector) { return document.querySelectorAll(selector) }
@@ -1435,6 +1631,7 @@ const FortuneModule = (function () {
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
   QS.initDefaultBanks(defaultBanks)
+  Auth.init()
   AAModule.refresh()
   QuizModule.showHome()
   FortuneModule.refresh()

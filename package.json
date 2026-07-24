@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "个人工具箱",
   "scripts": {
-    "build": "node -e \"const fs=require('fs');const path=require('path');fs.mkdirSync('dist',{recursive:true});const files=['index.html','styles.css','app.js','quiz-storage.js','default-questions.js','server.js','start.bat','DESIGN.md','README.md'];files.forEach(f=>{try{fs.copyFileSync(f,path.join('dist',f))}catch(e){}});console.log('Build complete')\""
-  }
+    "build": "node build.js"
+  },
+  "devDependencies": {}
 }
